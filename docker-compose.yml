@@ -1,15 +1,21 @@
-version: '3.8'
+version: "3.8"
 services:
-  server:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: nginx
-    restart: on-failure
+  nginx:
+    build: ./nginx/
+    container_name: nginx-container
+    links:
+      - php
     ports:
-      - 80:80
-    networks:
-     - backend
+      - "80:80"
+    volumes:
+      - ./www/html/:/var/www/html/
+  php:
+    image: php:7.0-fpm
+    container_name: php-container
+    expose:
+      - 9000
+    volumes:
+      - ./www/html/:/var/www/html/
 
   mysql:
     image: mysql:8
@@ -30,7 +36,7 @@ services:
       MYSQL_PASSWORD_FILE: /run/secrets/mysql_password
       MYSQL_DATABASE: dockerFuDB
     networks:
-     - backend
+      - backend
 
   redis:
     image: redis:alpine3.16
@@ -45,6 +51,7 @@ volumes:
   mysql_persist:
   redis_persist:
 
+
 secrets:
   mysql_root_password:
     file: ./root_secret.txt
@@ -53,3 +60,19 @@ secrets:
 
 networks:
   backend:
+
+    # server:
+    #   build:
+    #     context: .
+    #     dockerfile: Dockerfile
+    #   container_name: nginx
+    #   restart: on-failure
+    #   volumes:
+    #     - ./config:/etc/nginx/conf.d
+    #   ports:
+    #     - 80:80
+    #   networks:
+    #    - backend
+    #   depends_on:
+    #     - mysql
+    #     - redis
