@@ -1,0 +1,55 @@
+version: '3.8'
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nginx
+    restart: on-failure
+    ports:
+      - 80:80
+    networks:
+     - backend
+
+  mysql:
+    image: mysql:8
+    container_name: mysql
+    restart: on-failure
+    ports:
+      - 3306:3306
+    volumes:
+      - mysql_persist:/var/lib/mysql
+      - ./database:/docker-entrypoint-initdb.d
+    secrets:
+      - mysql_root_password
+      - mysql_password
+    environment:
+      MYSQL_ROOT_USER: root
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
+      MYSQL_USER: dockerusr
+      MYSQL_PASSWORD_FILE: /run/secrets/mysql_password
+      MYSQL_DATABASE: dockerFuDB
+    networks:
+     - backend
+
+  redis:
+    image: redis:alpine3.16
+    container_name: redis
+    restart: on-failure
+    volumes:
+      - redis_persist:/data
+    networks:
+      - backend
+
+volumes:
+  mysql_persist:
+  redis_persist:
+
+secrets:
+  mysql_root_password:
+    file: ./root_secret.txt
+  mysql_password:
+    file: ./user_secret.txt
+
+networks:
+  backend:
